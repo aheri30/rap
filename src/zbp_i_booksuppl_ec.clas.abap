@@ -1,0 +1,5 @@
+CLASS zbp_i_booksuppl_ec DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF z_i_travel_ec.
+ENDCLASS.
+
+CLASS zbp_i_booksuppl_ec IMPLEMENTATION.
+ENDCLASS.

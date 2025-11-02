@@ -1,0 +1,5 @@
+CLASS zbp_i_hcm_master_ec DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF z_i_hcm_master_ec.
+ENDCLASS.
+
+CLASS zbp_i_hcm_master_ec IMPLEMENTATION.
+ENDCLASS.

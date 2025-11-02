@@ -1,0 +1,139 @@
+managed;
+//strict ( 2 ); //Uncomment this line in order to enable strict mode 2. The strict mode has two variants (strict(1), strict(2)) and is prerequisite to be future proof regarding syntax and to be able to release your BO.
+
+define behavior for z_i_travel_ec alias Travel
+implementation in class zbp_i_travel_ec unique
+persistent table ztravel_ec
+with additional save
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+{
+
+
+  field ( readonly ) LastChangedAt, LastChangedBy, CreatedAt, CreatedBy;
+  field ( mandatory ) travelId, AgencyId, OverallStatus, BookingFee, CurrencyCode;
+  //Dinamic Field
+  field ( features : instance ) TravelId, OverallStatus;
+
+  create ( authorization : global );
+  update;
+  delete;
+
+  //Validaciones
+  validation validateCustomer on save { create; field CustomerId; }
+  validation validateDates on save { create; field BeginDate, EndDate; }
+  validation validateStatus on save { create; field OverallStatus; }
+
+  //Acciones
+  action ( features : instance ) acceptTravel result [1] $self;
+  action ( features : instance ) rejectTravel result [1] $self;
+
+  action createTravelByTemplate result [1] $self;
+
+
+
+  association _Booking { create ( features: instance ); }
+
+  mapping for ztravel_ec
+    {
+
+      // Campos Clave
+      TravelId      = travel_id;
+      // Mapeo de campos de Negocio (donde difieren los nombres)
+      AgencyId      = agency_id;
+      CustomerId    = customer_id;
+      BeginDate     = begin_date;
+      EndDate       = end_date;
+      BookingFee    = booking_fee;
+      TotalPrice    = total_price;
+      CurrencyCode  = currency_code;
+      Description   = description;
+      OverallStatus = overall_status;
+      // Mapeo de campos de administración (Audit Fields)
+      CreatedBy     = created_by;
+      CreatedAt     = created_at;
+      LastChangedBy = last_changed_by;
+      LastChangedAt = last_changed_at;
+    }
+}
+
+define behavior for z_i_booking_ec alias Booking
+implementation in class zbp_i_booking_ec unique
+persistent table zbooking_ec
+lock dependent by _Travel
+//authorization dependent by _Travel
+//etag master <field_name>
+{
+
+  field ( readonly ) TravelId;
+  field ( mandatory ) bookingid, CarrierId, ConnectionId, FlightDate, BookingStatus;
+
+
+  update;
+  delete;
+
+  //Validaciones
+  validation valideStatus on save { create; field BookingStatus; }
+
+  //Determinaciones
+  determination calculateTotalFlightPrice on modify { field FlightPrice, CurrencyCode; }
+
+  association _Travel;
+  association _BookingSupplement { create ( features: instance ); }
+
+
+  mapping for zbooking_ec
+    {
+
+      // Mapeo de campos clave
+      TravelId      = travel_id;
+      BookingId     = booking_id;
+      // Mapeo de campos de Negocio (CamelCase = snake_case)
+      BookingDate   = booking_date;
+      CustomerId    = customer_id;
+      CarrierId     = carrier_id;
+      ConnectionId  = connection_id;
+      FlightDate    = flight_date;
+      FlightPrice   = flight_price;
+      CurrencyCode  = currency_code;
+      BookingStatus = booking_status;
+      // Mapeo de campos de administración (Audit Fields)
+      LastChangeAt  = last_change_at;
+    }
+}
+
+define behavior for z_i_booksuppl_ec alias Supplement
+implementation in class zbp_i_booksuppl_ec unique
+with unmanaged save
+//persistent table zbooksuppl_ec
+lock dependent by _Travel
+//lock dependent ( TravelId = TravelId )
+//authorization dependent by _Travel
+etag master LastChangedAt
+{
+  update;
+  delete;
+  field ( readonly ) TravelId, BookingId;
+  field ( mandatory ) SupplementId, Price;
+
+  //Determinaciones
+  determination calculateTotalSupplPrice on modify { field Price, Currency; }
+  //  mapping for zbooksuppl_ec
+  //    {
+  //
+  //       Mapeo de campos clave
+  //      TravelId            = travel_id;
+  //      BookingId           = booking_id;
+  //      BookingSupplementId = booking_supplement_id;
+  //       Mapeo de campos de Negocio
+  //      SupplementId        = supplement_id;
+  //      Price               = price;
+  //      Currency            = currency;
+  //       Mapeo de campos de administración
+  //      LastChangedAt       = last_changed_at;
+  //    }
+
+  association _Travel;
+  association _Booking;
+}

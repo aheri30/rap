@@ -1,0 +1,4 @@
+@EndUserText.label: 'HCM Master'
+define service Zsd_hcm_master_ec {
+  expose z_c_hcm_master_ec as HCMMaster;
+}
